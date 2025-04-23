@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use color_eyre::eyre::Result;
 
 use crate::check::SymType;
@@ -9,8 +11,7 @@ fn extract_line(line: &str) -> Result<SymInfo> {
     SymInfo::from_re_rec(line)
 }
 
-pub fn check_func(func_name: &str) -> Result<Option<SymInfo>> {
-    let bin_path = get_bin_path();
+pub fn check_func_impl(bin_path: &Path, func_name: &str) -> Result<Option<SymInfo>> {
     let text = get_symbols_info_text(bin_path)?;
 
     // handle output
@@ -41,4 +42,27 @@ pub fn check_func(func_name: &str) -> Result<Option<SymInfo>> {
         }
     }
     Ok(None)
+}
+
+pub fn check_func(func_name: &str) -> Result<Option<SymInfo>> {
+    let bin_path = get_bin_path();
+    check_func_impl(bin_path, func_name)
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{path::PathBuf, str::FromStr};
+
+    use crate::utils::report::init_report_utils;
+
+    use super::*;
+    use color_eyre::eyre::Result;
+
+    #[test]
+    fn test_check_function() -> Result<()> {
+        init_report_utils()?;
+        let op = check_func_impl(&PathBuf::from_str("./inputs/a.out")?, "say_hello")?;
+        assert!(op.is_some());
+        Ok(())
+    }
 }
